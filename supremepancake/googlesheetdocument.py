@@ -35,16 +35,15 @@ class GoogleSheetDocument:
     _spreadsheet: gspread.models.Spreadsheet
     """gspread spreadsheet object"""
     def __init__(self, credential_path: str, sheet_key: str):
-        self._credential_path = credential_path
-        self._sheet_key = sheet_key
         logging.info('Opening sheet "%s" with credentials "%s"', sheet_key,
                      credential_path)
+        self._credential_path = credential_path
+        self._sheet_key = sheet_key
         credentials = ServiceAccountCredentials.from_json_keyfile_name(
             credential_path, ['https://spreadsheets.google.com/feeds'])
         self._client = gspread.authorize(credentials)
         self._spreadsheet = self._client.open_by_key(sheet_key)
         worksheets = [ws.title for ws in self._spreadsheet.worksheets()]
-        logging.debug("Available worksheets %s", str(worksheets))
         if 'sp_conf' in worksheets:
             self._sheet_sp_conf = self._spreadsheet.worksheet('sp_conf')
         else:
@@ -59,3 +58,16 @@ class GoogleSheetDocument:
         else:
             logging.error('Worksheet "sp_queries" not found')
             raise ValueError('Worksheet "sp_queries" not found')
+
+    def get_config(self) -> Dict[str, str]:
+        """Returns a dict of configurations options as specified in worksheet
+        'sp_config'"""
+        config: Dict[str, str] = {
+            'interval': '60',
+            'jitter': '5',
+            'version': '1'
+        }
+        if self._sheet_sp_conf:
+            for row in self._sheet_sp_conf.get_all_values()[1:]:
+                config[row[0]] = row[1]
+        return config

@@ -41,7 +41,7 @@ and make the sheets more human-readable.
     queries and updates data.
   * `jitter` (default: `5`): Global request jitter (in seconds). When requests
     are scheduled, a random jitter is added to avoid request bursts.
-  * `version` (default: `latest`): Version of the spreadsheet structure to use.
+  * `version` (default: `1`): Version of the spreadsheet structure to use.
 * `sp_data` (write only, must exist): This sheet is where `supreme-pancake`
   will store the result of each query. The result of queries specified in
   `sq_queries` will be stored in column `A` of the corresponding row (i.e. the
