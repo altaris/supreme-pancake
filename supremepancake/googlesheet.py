@@ -14,7 +14,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from query import Query
 
 
-class GoogleSheetDocument:
+class GoogleSheet:
     """A Google Sheet with supreme-pancake configuration worksheets"""
 
     _client: gspread.client.Client
