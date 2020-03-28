@@ -6,7 +6,7 @@ See also:
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -74,11 +74,7 @@ class GoogleSheet:
     def get_config(self) -> Dict[str, str]:
         """Returns a dict of configurations options as specified in worksheet
         'sp_config'"""
-        config: Dict[str, str] = {
-            'interval': 60,
-            'jitter': 5,
-            'version': 1
-        }
+        config: Dict[str, Any] = {'interval': 60, 'jitter': 5, 'version': 1}
         if self._sheet_sp_conf:
             for row in self._sheet_sp_conf.get_all_values()[1:]:
                 config[row[0]] = row[1]

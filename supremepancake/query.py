@@ -68,27 +68,25 @@ class Query:
         """Applies an aggregation operator"""
         if self._aggregation == '':
             return data
-        elif self._aggregation == 'AVG':
+        if self._aggregation == 'AVG':
             raise NotImplementedError
-        elif self._aggregation == 'COUNT':
+        if self._aggregation == 'COUNT':
             assert_isinstance(data, List)
             return len(data)
-        elif self._aggregation == 'MAX':
+        if self._aggregation == 'MAX':
             raise NotImplementedError
-        elif self._aggregation == 'MED':
+        if self._aggregation == 'MED':
             raise NotImplementedError
-        elif self._aggregation == 'MIN':
+        if self._aggregation == 'MIN':
             raise NotImplementedError
-        elif self._aggregation == 'STDEV':
+        if self._aggregation == 'STDEV':
             raise NotImplementedError
-        elif self._aggregation == 'SUM':
+        if self._aggregation == 'SUM':
             raise NotImplementedError
-        elif self._aggregation == 'VAR':
+        if self._aggregation == 'VAR':
             raise NotImplementedError
-        else:
-            raise QueryError(
-                AGGREGATION_INVALID_OPERATOR,
-                f'Unknown aggregation operator {self._aggregation}')
+        raise QueryError(AGGREGATION_INVALID_OPERATOR,
+                         f'Unknown aggregation operator {self._aggregation}')
 
     def _execute_jsonpath(self, data: Any) -> List[Any]:
         """Applies a JSONPath filter on a data in string form"""

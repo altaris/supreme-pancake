@@ -53,6 +53,10 @@ def parse_command_line_arguments() -> argparse.Namespace:
         default='INFO',
         help='Logging level, either "DEBUG", "INFO", "WARNING", "ERROR", '
         'or "CRITICAL"')
+    parser.add_argument('--one-shot',
+                        action='store_true',
+                        default=False,
+                        help='Runs all queries once')
     parser.add_argument('-s',
                         '--sheet-key',
                         action='store',
