@@ -6,7 +6,7 @@ import logging
 # pylint: disable=no-name-in-module
 from __init__ import __version__
 
-import googlesheet
+from googlesheetdocument import GoogleSheetDocument
 
 
 def init_logging(logging_level_str: str) -> None:
@@ -33,6 +33,7 @@ def main() -> None:
     init_logging(args.logging_level)
     logging.info('Starting supreme-pancake v%s', __version__)
     logging.debug('Command line arguments %s', str(args))
+    document = GoogleSheetDocument(args.credentials, args.sheet_key)
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
