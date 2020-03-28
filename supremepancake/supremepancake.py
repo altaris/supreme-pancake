@@ -36,6 +36,8 @@ def main() -> None:
     document = GoogleSheet(args.credentials, args.sheet_key)
     if args.one_shot:
         document.execute_all_queries()
+    else:
+        raise NotImplementedError
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
