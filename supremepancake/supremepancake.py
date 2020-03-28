@@ -34,7 +34,8 @@ def main() -> None:
     logging.info('Starting supreme-pancake v%s', __version__)
     logging.debug('Command line arguments %s', str(args))
     document = GoogleSheet(args.credentials, args.sheet_key)
-    document.execute_all_queries()
+    if args.one_shot:
+        document.execute_all_queries()
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
@@ -56,7 +57,7 @@ def parse_command_line_arguments() -> argparse.Namespace:
     parser.add_argument('--one-shot',
                         action='store_true',
                         default=False,
-                        help='Runs all queries once')
+                        help='Runs all queries once and exit')
     parser.add_argument('-s',
                         '--sheet-key',
                         action='store',
