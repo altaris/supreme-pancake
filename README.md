@@ -91,6 +91,49 @@ and make the sheets more human-readable.
   code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_Server_errors).
 
 
+# Development
+
+## Dependencies
+
+* `python3.8`
+* `requirements.txt` for runtime dependencies
+* `requirements.dev.txt` for development dependencies
+
+Simply run
+```sh
+virtualenv venv -p python3.8
+pip install -r requirements.txt
+pip install -r requirements.dev.txt
+```
+
+## Running
+
+```sh
+make run  # Default command line arguments are '--help'
+RUN_ARGS='--verbose' make run  # Custom command line arguments
+```
+
+## Documentation
+
+Simply run
+```sh
+make docs
+```
+This will generate the HTML doc of the project, and the index file should be at
+`out/docs/html/index.html`.
+
+## Code quality
+
+Don't forget to run
+```sh
+make
+```
+to format the code following [pep8](https://www.python.org/dev/peps/pep-0008/),
+typecheck it using [mypy](http://mypy-lang.org/), and lint check it. Note that
+the formatter [yapf](https://github.com/google/yapf) does not yet support
+Python 3.8 (see [issue #772](https://github.com/google/yapf/issues/772)), so
+please refrain from using the walrus operator.
+
 # References
 
 * [Google Sheet API for
