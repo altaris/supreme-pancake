@@ -1,6 +1,8 @@
 """Query module"""
 
 import datetime
+from decimal import Decimal
+import statistics
 
 from typing import Any, Callable, cast, List, Optional
 
@@ -68,23 +70,24 @@ class Query:
         """Applies an aggregation operator"""
         if self._aggregation == '':
             return data
-        if self._aggregation == 'AVG':
-            raise NotImplementedError
         if self._aggregation == 'COUNT':
             assert_isinstance(data, List)
             return len(data)
-        if self._aggregation == 'MAX':
-            raise NotImplementedError
-        if self._aggregation == 'MED':
-            raise NotImplementedError
-        if self._aggregation == 'MIN':
-            raise NotImplementedError
-        if self._aggregation == 'STDEV':
-            raise NotImplementedError
-        if self._aggregation == 'SUM':
-            raise NotImplementedError
-        if self._aggregation == 'VAR':
-            raise NotImplementedError
+        if self._aggregation in [
+                'AVG', 'MAX', 'MED', 'MIN', 'STDEV', 'SUM', 'VAR'
+        ]:
+            assert_isinstance(data, List)
+            data = [Decimal(x) for x in data]
+            function = {
+                'AVG': statistics.mean,
+                'MAX': max,
+                'MED': statistics.median,
+                'MIN': min,
+                'STDEV': statistics.stdev,
+                'SUM': sum,
+                'VAR': statistics.variance,
+            }[self._aggregation]
+            return function(data)
         raise QueryError(AGGREGATION_INVALID_OPERATOR,
                          f'Unknown aggregation operator {self._aggregation}')
 
