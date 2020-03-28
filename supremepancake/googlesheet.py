@@ -19,15 +19,6 @@ class GoogleSheet:
 
     _client: gspread.client.Client
     """gspread Google client object"""
-    _credential_path: str
-    """Path of the credential file"""
-    _sheet_key: str
-    """Key of the google sheet
-
-    See also:
-        `How do I find my Google Sheet Key? <https://support.qooqee.com/hc/
-        en-us/articles/360000471814-How-do-I-find-my-Google-Sheet-Key->`_
-    """
     _sheet_sp_conf: Optional[gspread.models.Worksheet]
     """The 'sp_conf' worksheet model"""
     _sheet_sp_data: gspread.models.Worksheet
@@ -39,27 +30,27 @@ class GoogleSheet:
     def __init__(self, credential_path: str, sheet_key: str):
         logging.info('Opening sheet "%s" with credentials "%s"', sheet_key,
                      credential_path)
-        self._credential_path = credential_path
-        self._sheet_key = sheet_key
+        self._authorize_client(credential_path)
+        self._open_spreadsheet(sheet_key)
+
+    def _authorize_client(self, credential_path: str) -> None:
+        """Authorizes a Google Sheet client"""
         credentials = ServiceAccountCredentials.from_json_keyfile_name(
             credential_path, ['https://spreadsheets.google.com/feeds'])
         self._client = gspread.authorize(credentials)
+
+    def _open_spreadsheet(self, sheet_key: str) -> None:
+        """Opens a spreadsheet"""
         self._spreadsheet = self._client.open_by_key(sheet_key)
-        worksheets = [ws.title for ws in self._spreadsheet.worksheets()]
-        if 'sp_conf' in worksheets:
+        try:
             self._sheet_sp_conf = self._spreadsheet.worksheet('sp_conf')
-        else:
+        except gspread.exceptions.WorksheetNotFound:
             self._sheet_sp_conf = None
-        if 'sp_data' in worksheets:
+        try:
             self._sheet_sp_data = self._spreadsheet.worksheet('sp_data')
-        else:
-            logging.error('Worksheet "sp_data" not found')
-            raise ValueError('Worksheet "sp_data" not found')
-        if 'sp_queries' in worksheets:
             self._sheet_sp_queries = self._spreadsheet.worksheet('sp_queries')
-        else:
-            logging.error('Worksheet "sp_queries" not found')
-            raise ValueError('Worksheet "sp_queries" not found')
+        except gspread.exceptions.WorksheetNotFound as error:
+            raise ValueError(f'Worksheet "{str(error)}" not found')
 
     def execute_all_queries(self):
         """Executes all the queries specified in worksheet 'sp_queries'"""
