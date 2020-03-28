@@ -6,10 +6,12 @@ See also:
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
+from query import Query
 
 
 class GoogleSheetDocument:
@@ -59,15 +61,31 @@ class GoogleSheetDocument:
             logging.error('Worksheet "sp_queries" not found')
             raise ValueError('Worksheet "sp_queries" not found')
 
+    def execute_all_queries(self):
+        """Executes all the queries specified in worksheet 'sp_queries'"""
+        results: List[List] = [query.execute() for query in self.get_queries()]
+        self._sheet_sp_data.clear()
+        self._sheet_sp_data.update(f'A1:G1', [[
+            'result', 'size', 'length', 'error_code', 'error_message',
+            'query_start', 'query_end'
+        ]])
+        self._sheet_sp_data.update(f'A2:G{len(results) + 1}', results)
+
     def get_config(self) -> Dict[str, str]:
         """Returns a dict of configurations options as specified in worksheet
         'sp_config'"""
         config: Dict[str, str] = {
-            'interval': '60',
-            'jitter': '5',
-            'version': '1'
+            'interval': 60,
+            'jitter': 5,
+            'version': 1
         }
         if self._sheet_sp_conf:
             for row in self._sheet_sp_conf.get_all_values()[1:]:
                 config[row[0]] = row[1]
         return config
+
+    def get_queries(self) -> List[Query]:
+        """Returns a list of queries specified by worksheet 'sp_queries'"""
+        return [
+            Query(row) for row in self._sheet_sp_queries.get_all_values()[1:]
+        ]

@@ -34,7 +34,7 @@ def main() -> None:
     logging.info('Starting supreme-pancake v%s', __version__)
     logging.debug('Command line arguments %s', str(args))
     document = GoogleSheetDocument(args.credentials, args.sheet_key)
-    print(document.get_config())
+    document.execute_all_queries()
 
 
 def parse_command_line_arguments() -> argparse.Namespace:

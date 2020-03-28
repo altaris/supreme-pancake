@@ -45,7 +45,8 @@ and make the sheets more human-readable.
 * `sp_data` (write only, must exist): This sheet is where `supreme-pancake`
   will store the result of each query. The result of queries specified in
   `sq_queries` will be stored in column `A` of the corresponding row (i.e. the
-  result of a query specified at row 42 will writted in row 42).
+  result of a query specified at row 42 will writted in row 42). Note that the
+  sheet is cleared at each refresh.
   * Column `A`: The result of the query.
   * Column `B`: Size of the result (in bytes).
   * Column `C`: Length of the result if it is a table, otherwise `-1`.
@@ -53,7 +54,7 @@ and make the sheets more human-readable.
   * Column `E`: Error message.
   * Column `F`: Time when the query started.
   * Column `G`: Time when the query finished.
-* `sp_queries` (read only, mist exist): Sheet storing the queries.
+* `sp_queries` (read only, must exist): Sheet storing the queries.
   * Column `A`: HTTP method. Currently supported methods are `GET` and `POST`.
   * Column `B`: URL (with the `https://` and all).
   * Column `C`: JSONPath query.
@@ -73,6 +74,7 @@ and make the sheets more human-readable.
 
 ### Error codes
 
+* `-999`: Unknown error, sorry.
 * `-1xx`: Invalid query.
   * `-100`: Generic query error, refer to error message.
   * `-101`: Invalid or unsupported HTTP method.
@@ -81,9 +83,9 @@ and make the sheets more human-readable.
   * `-111`: Invalid JSONPath query (syntax error).
   * `-120`: Generic aggregation error
   * `-121`: Invalid aggregation operator.
-  * `-121`: Invalid datatype for specified aggregation operator (e.g. `AVG` not
+  * `-122`: Invalid datatype for specified aggregation operator (e.g. `AVG` not
     receiving a table if numbers).
-  * `-122`: Arithmetic error during aggregation.
+  * `-123`: Arithmetic error during aggregation.
 * `0`: No error :ok_hand:.
 * `4xx`: [HTTP client error
   code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#4xx_Client_errors).
