@@ -3,6 +3,9 @@ supreme-pancake
 
 (github found the name for this project)
 
+![Python 3](https://badgen.net/badge/Python/3/blue)
+[![MIT License](https://badgen.net/badge/license/MIT/blue)](https://choosealicense.com/licenses/mit/)
+
 Implements a `REST API -> JSONPath -> Google Sheet` dataflow. In more details:
 1. performs REST `GET` calls that return JSON documents;
 2. process them with [JSONPath
