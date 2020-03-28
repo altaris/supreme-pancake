@@ -3,6 +3,8 @@
 import argparse
 import logging
 
+from __init__ import __version__
+
 
 def init_logging(logging_level_str: str) -> None:
     """Inits the logging facility.
@@ -26,12 +28,14 @@ def main() -> None:
     """Main function."""
     args = parse_command_line_arguments()
     init_logging(args.logging_level)
+    logging.info('Starting supreme-pancake v%s', __version__)
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
     """Specifies the command line parser and returns a
     :class:`argparse.Namespace` containing the arguments."""
-    parser = argparse.ArgumentParser(description='Supreme pancake')
+    parser = argparse.ArgumentParser(
+        description=f'supreme-pancake v{__version__}')
     parser.add_argument(
         '-l',
         '--logging-level',
