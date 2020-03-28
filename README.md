@@ -138,7 +138,6 @@ please refrain from using the walrus operator.
 
 # References
 
-* [Google Sheet API for
-  Python](https://developers.google.com/sheets/api/quickstart/python);
-* [jsonpath-ng](https://github.com/h2non/jsonpath-ng), [Additional reference
-  about JSONPath](https://goessner.net/articles/JsonPath/)
+* [`gspreadsheet` documentation](https://gspread.readthedocs.io/en/latest/);
+* [`jsonpath-ng` homepage](https://github.com/h2non/jsonpath-ng), [additional
+  reference about JSONPath](https://goessner.net/articles/JsonPath/).
