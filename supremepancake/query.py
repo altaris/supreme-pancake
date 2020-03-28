@@ -33,6 +33,7 @@ class QueryError(Exception):
         return f'({self.code}) {self.message}'
 
 
+# pylint: disable=too-few-public-methods
 class Query:
     """Represents a query according to the v1 specification
 
@@ -87,6 +88,11 @@ class Query:
                 'SUM': sum,
                 'VAR': statistics.variance,
             }[self._aggregation]
+            function = cast(Callable, function)
+            if not function:
+                raise QueryError(
+                    UNKNOWN_ERROR,
+                    f'Failed to cast aggregation operator {self._aggregation}')
             return function(data)
         raise QueryError(AGGREGATION_INVALID_OPERATOR,
                          f'Unknown aggregation operator {self._aggregation}')
