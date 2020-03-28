@@ -3,7 +3,10 @@
 import argparse
 import logging
 
+# pylint: disable=no-name-in-module
 from __init__ import __version__
+
+import googlesheet
 
 
 def init_logging(logging_level_str: str) -> None:
@@ -29,6 +32,7 @@ def main() -> None:
     args = parse_command_line_arguments()
     init_logging(args.logging_level)
     logging.info('Starting supreme-pancake v%s', __version__)
+    logging.debug('Command line arguments %s', str(args))
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
@@ -36,6 +40,10 @@ def parse_command_line_arguments() -> argparse.Namespace:
     :class:`argparse.Namespace` containing the arguments."""
     parser = argparse.ArgumentParser(
         description=f'supreme-pancake v{__version__}')
+    parser.add_argument('-c',
+                        '--credentials',
+                        action='store',
+                        help='Credential JSON file')
     parser.add_argument(
         '-l',
         '--logging-level',
@@ -43,6 +51,10 @@ def parse_command_line_arguments() -> argparse.Namespace:
         default='INFO',
         help='Logging level, either "DEBUG", "INFO", "WARNING", "ERROR", '
         'or "CRITICAL"')
+    parser.add_argument('-s',
+                        '--sheet-key',
+                        action='store',
+                        help='Google Sheet key')
     return parser.parse_args()
 
 
