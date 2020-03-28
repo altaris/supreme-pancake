@@ -1,0 +1,4 @@
+Queries
+=======
+
+.. automodule:: query

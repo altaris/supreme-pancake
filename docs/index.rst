@@ -6,6 +6,8 @@ evesink
    :caption: Contents:
 
    supremepancake
+   googlesheet
+   query
 
 
 Indices and tables
