@@ -23,7 +23,7 @@ def init_logging(logging_level_str: str) -> None:
         'INFO': logging.INFO,
         'WARNING': logging.WARNING
     }.get(logging_level_str.upper(), logging.WARNING)
-    logging.basicConfig(format='%(asctime)s [%(levelname)-7s] %(message)s',
+    logging.basicConfig(format='%(asctime)s [%(levelname)-8s] %(message)s',
                         level=logging_level)
 
 
@@ -33,8 +33,8 @@ def main() -> None:
     init_logging(args.logging_level)
     logging.info('Starting supreme-pancake v%s', __version__)
     logging.debug('Command line arguments %s', str(args))
-    document = GoogleSheet(args.credentials, args.sheet_key)
     if args.one_shot:
+        document = GoogleSheet(args.credentials, args.sheet_key)
         document.execute_all_queries()
     else:
         raise NotImplementedError
@@ -68,4 +68,7 @@ def parse_command_line_arguments() -> argparse.Namespace:
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as error:  # pylint: disable=broad-except
+        logging.critical('%s: %s', type(error).__name__, str(error))
