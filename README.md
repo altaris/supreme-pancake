@@ -68,7 +68,14 @@ and make the sheets more human-readable.
 It's a JSON document specifying various parameters for the call.
 * `request`: Document storing requests parameters.
   * `data` (optional): Data to pass in the request.
-  * `headers` (optional): Headers of the request.
+  * `headers` (optional): Headers of the request. Default headers are
+  ```json
+  {
+    "Accept-Encoding": "gzip",
+    "accept": "application/json",
+    "User-Agent": "supreme-pancake",
+  }
+  ```
   * `method`: HTTP method to use, currently supported are `GET` and `POST`.
     This field is case-insensitive.
   * `parameters` (optional): URL parameters of the request.
@@ -76,9 +83,8 @@ It's a JSON document specifying various parameters for the call.
   interpreted.
   * `data` (optional): JSONPath of where thet actual data is in the reponse
     JSON.
-  * `pagination` (optional): Subdocument specifying pagination parameters, if
-    applicable.
-    * `next`: JSONPath of the `next` field, which is the url to the next page.
+  * `next`: For paginated responses, JSONPath of the `next` field, which is the
+    url to the next page.
 
 Values starting with `$` are references to secrets. For example, if
 `supreme-pancake` was invoked with the `-s MY_SECRET=123456789`, then the value

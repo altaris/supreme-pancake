@@ -2,6 +2,7 @@
 
 import datetime
 from decimal import Decimal
+import json
 import statistics
 
 from typing import Any, Callable, cast, Dict, List, Optional
@@ -46,8 +47,8 @@ class Query:
 
     _aggregation: str
     """The aggregation operator (see specification)"""
-    _http_method: str
-    """HTTP method for REST API call"""
+    _http_parameters: Dict[str, Any]
+    """HTTP parameters"""
     _jsonpath_query: str
     """The JSONPath query
 
@@ -62,15 +63,16 @@ class Query:
     """Wether the query is valid"""
 
     def __init__(self, parameter_list: List[str], secrets: Dict[str, str]):
-        if len(parameter_list) == 4:
+        try:
+            self._http_parameters = json.loads(parameter_list[0])
+            self._url = parameter_list[1]
             self._aggregation = parameter_list[3]
-            self._http_method = parameter_list[0]
             self._jsonpath_query = parameter_list[2]
             self._secrets = secrets
-            self._url = parameter_list[1]
-            self._valid = True
-        else:
+        except Exception:  # pylint: disable=broad-except
             self._valid = False
+        else:
+            self._valid = True
 
     def _execute_aggregation(self, data: Any) -> Any:
         """Applies an aggregation operator"""
@@ -117,28 +119,77 @@ class Query:
 
     def _execute_rest(self) -> Any:
         """Runs the REST API call"""
+        response_dict = self._http_parameters.get('response', {})
+        response_next_path = response_dict.get('next', None)
+        if response_next_path:
+            next_page = self._url
+            result: List = []
+            while next_page:
+                response_json = self._make_request(next_page)
+                result.append(self._get_response_json_data(response_json))
+                next_page = self._get_response_json_next_page(response_json)
+            return result
+        return self._make_request(self._url)
+
+    def _get_response_json_data(self, response_json: Dict) -> Any:
+        """Gets the data field from a response JSON document"""
+        response_dict = self._http_parameters.get('response', {})
+        response_data_path = response_dict.get('data', None)
+        if response_data_path is None:
+            return response_json
+        jsonpath_expr = parse(response_data_path)
+        matches = [match.value for match in jsonpath_expr.find(response_json)]
+        if matches:
+            return matches[0]
+        return None
+
+    def _get_response_json_next_page(self,
+                                     response_json: Dict) -> Optional[str]:
+        """In case of paginated requests, gets the next page url, or None if
+        there is no next page"""
+        response_dict = self._http_parameters.get('response', {})
+        response_next_path = response_dict.get('next', None)
+        if response_next_path is None:
+            return None
+        jsonpath_expr = parse(response_next_path)
+        matches = [match.value for match in jsonpath_expr.find(response_json)]
+        if matches:
+            return matches[0]
+        return None
+
+    def _make_request(self, url: str) -> dict:
+        """Executes a single HTTP request at a given url"""
+        request_dict = self._http_parameters.get('request', {})
+        request_data = request_dict.get('data', {})
+        request_headers = request_dict.get(
+            'headers', {
+                "Accept-Encoding": "gzip",
+                "accept": "application/json",
+                "User-Agent": "supreme-pancake",
+            })
+        request_method = request_dict.get('method', '???').upper()
+        request_parameters = request_dict.get('parameters', {})
         function = {
-            # 'DELETE': requests.delete,
             "GET": requests.get,
             "POST": requests.post,
-            # 'PUT': requests.put
-        }.get(self._http_method.upper(), None)
+        }.get(request_method, None)
         function = cast(Optional[Callable[..., requests.Response]], function)
         if not function:
             raise QueryError(
                 INVALID_OR_UNSUPPORTED_HTTP_METHOD,
-                f"Unknown or unsopported HTTP method {self._http_method}",
+                f"Unknown or unsopported HTTP method {request_method}",
             )
-        headers = {
-            "Accept-Encoding": "gzip",
-            "accept": "application/json",
-            "User-Agent": "supreme-pancake",
-        }
-        response: requests.Response = function(self._url, headers=headers)
-        if response.status_code >= 400:
-            raise QueryError(response.status_code, response.reason)
         try:
+            response: requests.Response = function(
+                url,
+                headers=request_headers,
+                data=request_data,
+                params=request_parameters,
+            )
+            response.raise_for_status()
             return response.json()
+        except requests.HTTPError as error:
+            raise QueryError(response.status_code, response.reason)
         except ValueError:
             raise QueryError(INVALID_QUERY, "Could not parse response JSON")
 
