@@ -49,9 +49,8 @@ and make the sheets more human-readable.
   * Column `G`: Time at which the query finished.
 * `sp_queries` (read only, must exist): Sheet storing the queries.
   * Column `A`: REST call configuration, see below.
-  * Column `B`: URL (with the `https://` and all).
-  * Column `E`: JSONPath query.
-  * Column `F`: Optional aggregation operator (see below).
+  * Column `B`: JSONPath query.
+  * Column `C`: Optional aggregation operator (see below).
 
 ### Configuration keys (`sp_conf`)
 
@@ -79,6 +78,7 @@ It's a JSON document specifying various parameters for the call.
   * `method`: HTTP method to use, currently supported are `GET` and `POST`.
     This field is case-insensitive.
   * `parameters` (optional): URL parameters of the request.
+  * `url`: URL (with the `https://` and all).
 * `response` (optional): Document indicating how the JSON response should be
   interpreted.
   * `data` (optional): JSONPath of where thet actual data is in the reponse

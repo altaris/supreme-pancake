@@ -57,17 +57,32 @@ class Query:
     """
     _secrets: Dict[str, str]
     """Secret dict, see ``-s`` command line option"""
-    _url: str
-    """URL for REST API call"""
     _valid: bool
     """Wether the query is valid"""
 
     def __init__(self, parameter_list: List[str], secrets: Dict[str, str]):
         try:
             self._http_parameters = json.loads(parameter_list[0])
-            self._url = parameter_list[1]
-            self._aggregation = parameter_list[3]
-            self._jsonpath_query = parameter_list[2]
+            if 'request' not in self._http_parameters:
+                raise ValueError
+            if 'data' not in self._http_parameters['request']:
+                self._http_parameters['request']['data'] = {}
+            if 'headers' not in self._http_parameters['request']:
+                self._http_parameters['request']['headers'] = {}
+            if 'method' not in self._http_parameters['request']:
+                raise ValueError
+            if 'parameters' not in self._http_parameters['request']:
+                self._http_parameters['request']['parameters'] = {}
+            if 'url' not in self._http_parameters['request']:
+                raise ValueError
+            if 'response' not in self._http_parameters:
+                self._http_parameters['response'] = {}
+            if 'data' not in self._http_parameters['response']:
+                self._http_parameters['response']['data'] = None
+            if 'next' not in self._http_parameters['response']:
+                self._http_parameters['response']['next'] = None
+            self._jsonpath_query = parameter_list[1]
+            self._aggregation = parameter_list[2]
             self._secrets = secrets
         except Exception:  # pylint: disable=broad-except
             self._valid = False
@@ -119,25 +134,21 @@ class Query:
 
     def _execute_rest(self) -> Any:
         """Runs the REST API call"""
-        response_dict = self._http_parameters.get('response', {})
-        response_next_path = response_dict.get('next', None)
-        if response_next_path:
-            next_page = self._url
+        if self._http_parameters['response']['next']:
+            next_page = self._http_parameters['request']['url']
             result: List = []
             while next_page:
                 response_json = self._make_request(next_page)
                 result.append(self._get_response_json_data(response_json))
                 next_page = self._get_response_json_next_page(response_json)
             return result
-        return self._make_request(self._url)
+        return self._make_request(self._http_parameters['request']['url'])
 
     def _get_response_json_data(self, response_json: Dict) -> Any:
         """Gets the data field from a response JSON document"""
-        response_dict = self._http_parameters.get('response', {})
-        response_data_path = response_dict.get('data', None)
-        if response_data_path is None:
+        if self._http_parameters['response']['data'] is None:
             return response_json
-        jsonpath_expr = parse(response_data_path)
+        jsonpath_expr = parse(self._http_parameters['response']['data'])
         matches = [match.value for match in jsonpath_expr.find(response_json)]
         if matches:
             return matches[0]
@@ -147,11 +158,9 @@ class Query:
                                      response_json: Dict) -> Optional[str]:
         """In case of paginated requests, gets the next page url, or None if
         there is no next page"""
-        response_dict = self._http_parameters.get('response', {})
-        response_next_path = response_dict.get('next', None)
-        if response_next_path is None:
+        if self._http_parameters['response']['next'] is None:
             return None
-        jsonpath_expr = parse(response_next_path)
+        jsonpath_expr = parse(self._http_parameters['response']['next'])
         matches = [match.value for match in jsonpath_expr.find(response_json)]
         if matches:
             return matches[0]
@@ -159,36 +168,26 @@ class Query:
 
     def _make_request(self, url: str) -> dict:
         """Executes a single HTTP request at a given url"""
-        request_dict = self._http_parameters.get('request', {})
-        request_data = request_dict.get('data', {})
-        request_headers = request_dict.get(
-            'headers', {
-                "Accept-Encoding": "gzip",
-                "accept": "application/json",
-                "User-Agent": "supreme-pancake",
-            })
-        request_method = request_dict.get('method', '???').upper()
-        request_parameters = request_dict.get('parameters', {})
         function = {
             "GET": requests.get,
             "POST": requests.post,
-        }.get(request_method, None)
+        }.get(self._http_parameters['request']['method'], None)
         function = cast(Optional[Callable[..., requests.Response]], function)
         if not function:
             raise QueryError(
                 INVALID_OR_UNSUPPORTED_HTTP_METHOD,
-                f"Unknown or unsopported HTTP method {request_method}",
+                f"Unknown or unsopported HTTP method {self._http_parameters['request']['method']}",
             )
         try:
             response: requests.Response = function(
                 url,
-                headers=request_headers,
-                data=request_data,
-                params=request_parameters,
+                headers=self._http_parameters['request']['headers'],
+                data=self._http_parameters['request']['data'],
+                params=self._http_parameters['request']['parameters'],
             )
             response.raise_for_status()
             return response.json()
-        except requests.HTTPError as error:
+        except requests.HTTPError:
             raise QueryError(response.status_code, response.reason)
         except ValueError:
             raise QueryError(INVALID_QUERY, "Could not parse response JSON")
@@ -206,16 +205,16 @@ class Query:
                 str(stage3),
                 size,
                 length,
-                "0",
-                "",
+                '0',
+                '',
                 query_start,
                 timestamp(),
             ]
         except QueryError as error:
             return [
-                "",
-                "0",
-                "-1",
+                '',
+                '0',
+                '-1',
                 error.code,
                 error.message,
                 query_start,
@@ -223,11 +222,11 @@ class Query:
             ]
         except Exception as error:  # pylint: disable=broad-except
             return [
-                "",
-                "0",
-                "-1",
+                '',
+                '0',
+                '-1',
                 UNKNOWN_ERROR,
-                str(error),
+                str(type(error).__name__) + ': ' + str(error),
                 query_start,
                 timestamp(),
             ]
