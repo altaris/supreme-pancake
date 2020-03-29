@@ -4,7 +4,7 @@ import datetime
 from decimal import Decimal
 import statistics
 
-from typing import Any, Callable, cast, List, Optional
+from typing import Any, Callable, cast, Dict, List, Optional
 
 from jsonpath_ng import parse
 import requests
@@ -54,18 +54,21 @@ class Query:
     See also:
         `JSONPath Reference <https://goessner.net/articles/JsonPath/>`
     """
+    _secrets: Dict[str, str]
+    """Secret dict, see ``-s`` command line option"""
     _url: str
     """URL for REST API call"""
     _valid: bool
     """Wether the query is valid"""
 
-    def __init__(self, parameter_list: List[str]):
+    def __init__(self, parameter_list: List[str], secrets: Dict[str, str]):
         if len(parameter_list) == 4:
-            self._valid = True
-            self._http_method = parameter_list[0]
-            self._url = parameter_list[1]
-            self._jsonpath_query = parameter_list[2]
             self._aggregation = parameter_list[3]
+            self._http_method = parameter_list[0]
+            self._jsonpath_query = parameter_list[2]
+            self._secrets = secrets
+            self._url = parameter_list[1]
+            self._valid = True
         else:
             self._valid = False
 

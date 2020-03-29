@@ -19,6 +19,8 @@ class GoogleSheet:
 
     _client: gspread.client.Client
     """gspread Google client object"""
+    _secrets: Dict[str, str]
+    """Secret dict, see ``-s`` command line option"""
     _sheet_sp_conf: Optional[gspread.models.Worksheet]
     """The 'sp_conf' worksheet model"""
     _sheet_sp_data: gspread.models.Worksheet
@@ -28,11 +30,13 @@ class GoogleSheet:
     _spreadsheet: gspread.models.Spreadsheet
     """gspread spreadsheet object"""
 
-    def __init__(self, credential_path: str, sheet_key: str):
+    def __init__(self, credential_path: str, sheet_key: str,
+                 secrets: Dict[str, str]):
         logging.info('Opening sheet "%s" with credentials "%s"', sheet_key,
                      credential_path)
         self._authorize_client(credential_path)
         self._open_spreadsheet(sheet_key)
+        self._secrets = secrets
 
     def _authorize_client(self, credential_path: str) -> None:
         """Authorizes a Google Sheet client"""
@@ -86,5 +90,6 @@ class GoogleSheet:
     def get_queries(self) -> List[Query]:
         """Returns a list of queries specified by worksheet 'sp_queries'"""
         return [
-            Query(row) for row in self._sheet_sp_queries.get_all_values()[1:]
+            Query(row, self._secrets)
+            for row in self._sheet_sp_queries.get_all_values()[1:]
         ]
