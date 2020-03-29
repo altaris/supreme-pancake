@@ -54,6 +54,12 @@ def parse_command_line_arguments() -> argparse.Namespace:
         help="Credential JSON file",
     )
     parser.add_argument(
+        "-k",
+        "--sheet-key",
+        action="store",
+        help="Google Sheet key",
+    )
+    parser.add_argument(
         "-l",
         "--logging-level",
         action="store",
@@ -66,12 +72,6 @@ def parse_command_line_arguments() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="Runs all queries once and exit",
-    )
-    parser.add_argument(
-        "-s",
-        "--sheet-key",
-        action="store",
-        help="Google Sheet key",
     )
     return parser.parse_args()
 
