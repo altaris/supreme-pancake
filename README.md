@@ -33,15 +33,8 @@ In every sheet, the first row is **always** ignored. Use it to label columns
 and make the sheets more human-readable.
 
 * `sp_conf` (read only, optional): This sheet works as a key-value store of
-  options and configurations for `supreme-pancake`. Rows are expected to have
-  the key name in column `A` and value in column `B`.
-  * `interval` (default: `60`): Time interval (in seconds) at which the
-    `supreme-pancake` configuration and query data are refreshed, i.e. the
-    interval at which `supreme-pancake` reads the relevant sheets, executes
-    queries and updates data.
-  * `jitter` (default: `5`): Global request jitter (in seconds). When requests
-    are scheduled, a random jitter is added to avoid request bursts.
-  * `version` (default: `1`): Version of the spreadsheet structure to use.
+  options and configurations for `supreme-pancake`, see below. Rows are
+  expected to have the key name in column `A` and value in column `B`.
 * `sp_data` (write only, must exist): This sheet is where `supreme-pancake`
   will store the result of each query. The result of queries specified in
   `sq_queries` will be stored in column `A` of the corresponding row (i.e. the
@@ -52,13 +45,44 @@ and make the sheets more human-readable.
   * Column `C`: Length of the result if it is a table, otherwise `-1`.
   * Column `D`: Error code (see below).
   * Column `E`: Error message.
-  * Column `F`: Time when the query started.
-  * Column `G`: Time when the query finished.
+  * Column `F`: Time at which the query started.
+  * Column `G`: Time at which the query finished.
 * `sp_queries` (read only, must exist): Sheet storing the queries.
-  * Column `A`: HTTP method. Currently supported methods are `GET` and `POST`.
+  * Column `A`: REST call configuration, see below.
   * Column `B`: URL (with the `https://` and all).
-  * Column `C`: JSONPath query.
-  * Column `D`: Optional aggregation operator (see below).
+  * Column `E`: JSONPath query.
+  * Column `F`: Optional aggregation operator (see below).
+
+### Configuration keys (`sp_conf`)
+
+* `interval` (default: `60`): Time interval (in seconds) at which the
+  `supreme-pancake` configuration and query data are refreshed, i.e. the
+  interval at which `supreme-pancake` reads the relevant sheets, executes
+  queries and updates data.
+* `jitter` (default: `5`): Global request jitter (in seconds). When requests
+  are scheduled, a random jitter is added to avoid request bursts.
+* `version` (default: `1`): Version of the spreadsheet structure to use.
+
+### REST call configuration
+
+It's a JSON document specifying various parameters for the call.
+* `request`: Document storing requests parameters.
+  * `data` (optional): Data to pass in the request.
+  * `headers` (optional): Headers of the request.
+  * `method`: HTTP method to use, currently supported are `GET` and `POST`.
+    This field is case-insensitive.
+  * `parameters` (optional): URL parameters of the request.
+* `response` (optional): Document indicating how the JSON response should be
+  interpreted.
+  * `data` (optional): JSONPath of where thet actual data is in the reponse
+    JSON.
+  * `pagination` (optional): Subdocument specifying pagination parameters, if
+    applicable.
+    * `next`: JSONPath of the `next` field, which is the url to the next page.
+
+Values starting with `$` are references to secrets. For example, if
+`supreme-pancake` was invoked with the `-s MY_SECRET=123456789`, then the value
+`"$MY_SECRET"` will be replaced by `"123456789"`.
 
 ### Aggregation operators
 
