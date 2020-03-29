@@ -24,13 +24,14 @@ NO_ERROR = 0
 
 class QueryError(Exception):
     """An exception describing a query error"""
+
     def __init__(self, code: int, message: str):
         super().__init__(self, message)
         self.code = code
         self.message = message
 
     def __str__(self) -> str:
-        return f'({self.code}) {self.message}'
+        return f"({self.code}) {self.message}"
 
 
 # pylint: disable=too-few-public-methods
@@ -57,6 +58,7 @@ class Query:
     """URL for REST API call"""
     _valid: bool
     """Wether the query is valid"""
+
     def __init__(self, parameter_list: List[str]):
         if len(parameter_list) == 4:
             self._valid = True
@@ -69,37 +71,40 @@ class Query:
 
     def _execute_aggregation(self, data: Any) -> Any:
         """Applies an aggregation operator"""
-        if self._aggregation == '':
+        if self._aggregation == "":
             return data
-        if self._aggregation == 'COUNT':
+        if self._aggregation == "COUNT":
             assert_isinstance(data, List)
             return len(data)
         if self._aggregation in [
-                'AVG', 'MAX', 'MED', 'MIN', 'STDEV', 'SUM', 'VAR'
+                "AVG", "MAX", "MED", "MIN", "STDEV", "SUM", "VAR"
         ]:
             assert_isinstance(data, List)
             data = [Decimal(x) for x in data]
             function = {
-                'AVG': statistics.mean,
-                'MAX': max,
-                'MED': statistics.median,
-                'MIN': min,
-                'STDEV': statistics.stdev,
-                'SUM': sum,
-                'VAR': statistics.variance,
+                "AVG": statistics.mean,
+                "MAX": max,
+                "MED": statistics.median,
+                "MIN": min,
+                "STDEV": statistics.stdev,
+                "SUM": sum,
+                "VAR": statistics.variance,
             }[self._aggregation]
             function = cast(Callable, function)
             if not function:
                 raise QueryError(
                     UNKNOWN_ERROR,
-                    f'Failed to cast aggregation operator {self._aggregation}')
+                    f"Failed to cast aggregation operator {self._aggregation}",
+                )
             return function(data)
-        raise QueryError(AGGREGATION_INVALID_OPERATOR,
-                         f'Unknown aggregation operator {self._aggregation}')
+        raise QueryError(
+            AGGREGATION_INVALID_OPERATOR,
+            f"Unknown aggregation operator {self._aggregation}",
+        )
 
     def _execute_jsonpath(self, data: Any) -> List[Any]:
         """Applies a JSONPath filter on a data in string form"""
-        if self._jsonpath_query == '':
+        if self._jsonpath_query == "":
             return data
         try:
             jsonpath_expr = parse(self._jsonpath_query)
@@ -111,19 +116,20 @@ class Query:
         """Runs the REST API call"""
         function = {
             # 'DELETE': requests.delete,
-            'GET': requests.get,
-            'POST': requests.post,
+            "GET": requests.get,
+            "POST": requests.post,
             # 'PUT': requests.put
         }.get(self._http_method.upper(), None)
         function = cast(Optional[Callable[..., requests.Response]], function)
         if not function:
             raise QueryError(
                 INVALID_OR_UNSUPPORTED_HTTP_METHOD,
-                f'Unknown or unsopported HTTP method {self._http_method}')
+                f"Unknown or unsopported HTTP method {self._http_method}",
+            )
         headers = {
-            'Accept-Encoding': 'gzip',
-            'accept': 'application/json',
-            'User-Agent': 'supreme-pancake'
+            "Accept-Encoding": "gzip",
+            "accept": "application/json",
+            "User-Agent": "supreme-pancake",
         }
         response: requests.Response = function(self._url, headers=headers)
         if response.status_code >= 400:
@@ -131,7 +137,7 @@ class Query:
         try:
             return response.json()
         except ValueError:
-            raise QueryError(INVALID_QUERY, 'Could not parse response JSON')
+            raise QueryError(INVALID_QUERY, "Could not parse response JSON")
 
     def execute(self) -> List[Any]:
         """Runs the query"""
@@ -140,22 +146,36 @@ class Query:
             stage1 = self._execute_rest()
             stage2 = self._execute_jsonpath(stage1)
             stage3 = self._execute_aggregation(stage2)
-            size = len(str(stage3).encode('UTF-8'))
+            size = len(str(stage3).encode("UTF-8"))
             length = len(stage3) if isinstance(stage3, List) else -1
             return [
-                str(stage3), size, length, '0', '', query_start,
-                timestamp()
+                str(stage3),
+                size,
+                length,
+                "0",
+                "",
+                query_start,
+                timestamp(),
             ]
         except QueryError as error:
             return [
-                '', '0', '-1', error.code, error.message, query_start,
-                timestamp()
+                "",
+                "0",
+                "-1",
+                error.code,
+                error.message,
+                query_start,
+                timestamp(),
             ]
         except Exception as error:  # pylint: disable=broad-except
             return [
-                '', '0', '-1', UNKNOWN_ERROR,
-                str(error), query_start,
-                timestamp()
+                "",
+                "0",
+                "-1",
+                UNKNOWN_ERROR,
+                str(error),
+                query_start,
+                timestamp(),
             ]
 
 
@@ -163,8 +183,10 @@ def assert_isinstance(obj: object, typ: type):
     """Asserts that an object has a certain type, otherwise raises a
     :class:`QueryError`"""
     if not isinstance(obj, typ):
-        raise QueryError(AGGREGATION_WRONG_DATATYPE,
-                         f'Type of data is {type(obj)}, excpected {str(typ)}')
+        raise QueryError(
+            AGGREGATION_WRONG_DATATYPE,
+            f"Type of data is {type(obj)}, excpected {str(typ)}",
+        )
 
 
 def timestamp() -> str:

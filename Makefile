@@ -15,7 +15,7 @@ docs:
 
 .PHONY: format
 format:
-	yapf --in-place --recursive --style pep8 --verbose $(SRC_PATH)
+	yapf --in-place --recursive --style google --verbose $(SRC_PATH)
 
 .PHONY: lint
 lint:
